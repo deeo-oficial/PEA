@@ -47,25 +47,116 @@
 
   <div id="screenJoin">
     <div class="panel">
-      <label for="roomName">Seu Nickname</label>
-      <input type="text" id="roomName" maxlength="25" placeholder="Ex: Anonimo, deeo...">
-      <div class="char-count" id="roomNameCount">0/25</div>
+      <label>SEU NICKNAME</label>
+      <input type="text" id="usernameInput" maxlength="25" placeholder="Digite seu nome...">
+      <div class="char-count" id="charCount">0/25</div>
     </div>
-    <button class="action-btn" id="btnGo">Entrar</button>
+    <button class="action-btn" id="btnEnter">Entrar</button>
   </div>
 
   <div id="screenFeed" class="hidden">
-    <div class="status" id="statusText">Conectando...</div>
+    <div class="status" id="statusText">Conectando ao servidor...</div>
     <div class="chat-container">
       <div class="chat" id="chatBox"></div>
       <div class="send-row" id="sendRow">
-        <input type="text" id="msgInput" maxlength="2000" placeholder="Escreva algo...">
+        <input type="text" id="msgInput" maxlength="2000" placeholder="Escreva uma mensagem...">
         <button class="send-btn" id="btnSend">Enviar</button>
       </div>
     </div>
   </div>
 </div>
 
-<script src="/script.js"></script>
+<script>
+  'use strict';
+
+  let ws = null;
+  let myUsername = '';
+
+  function sanitize(str, max) {
+    if (typeof str !== 'string') return '';
+    let clean = str.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim();
+    return max ? clean.slice(0, max) : clean;
+  }
+
+  function initWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = protocol + '//' + window.location.host;
+
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = function() {
+      document.getElementById('statusText').textContent = 'Conectado ao Feed Global';
+      document.getElementById('chatBox').style.display = 'flex';
+      document.getElementById('sendRow').style.display = 'flex';
+    };
+
+    ws.onerror = function() {
+      document.getElementById('statusText').textContent = 'Erro de conexão.';
+    };
+
+    ws.onclose = function() {
+      document.getElementById('statusText').textContent = 'Conexão encerrada.';
+      document.getElementById('sendRow').style.display = 'none';
+    };
+
+    ws.onmessage = function(event) {
+      let payload;
+      try { payload = JSON.parse(event.data); } catch(_) { return; }
+
+      if (payload && payload.type === 'feed_broadcast' && payload.data) {
+        printMessage(sanitize(payload.data.user, 25), sanitize(payload.data.text, 2000), 'them');
+      }
+    };
+  }
+
+  function printMessage(user, text, className) {
+    const box = document.getElementById('chatBox');
+    if (!box) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'msg ' + className;
+    wrapper.innerHTML = '<strong></strong> <span></span>';
+    wrapper.querySelector('strong').textContent = user ? user + ': ' : '';
+    wrapper.querySelector('span').textContent = text;
+    box.appendChild(wrapper);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function sendBroadcast() {
+    const input = document.getElementById('msgInput');
+    const text = sanitize(input.value, 2000);
+    if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+    ws.send(JSON.stringify({
+      type: 'feed_message',
+      data: { user: myUsername, text: text }
+    }));
+
+    printMessage(myUsername, text, 'me');
+    input.value = '';
+  }
+
+  // Monitorar input de texto do apelido
+  document.getElementById('usernameInput').oninput = function(e) {
+    const val = sanitize(e.target.value, 25);
+    e.target.value = val;
+    document.getElementById('charCount').textContent = val.length + '/25';
+  };
+
+  // Evento definitivo do clique do botão entrar
+  document.getElementById('btnEnter').onclick = function() {
+    const nameVal = document.getElementById('usernameInput').value;
+    myUsername = sanitize(nameVal, 25) || 'Anon_' + Math.floor(Math.random() * 9000 + 1000);
+
+    document.getElementById('screenJoin').classList.add('hidden');
+    document.getElementById('screenFeed').classList.remove('hidden');
+
+    initWebSocket();
+  };
+
+  document.getElementById('btnSend').onclick = sendBroadcast;
+  document.getElementById('msgInput').onkeydown = function(e) {
+    if (e.key === 'Enter') sendBroadcast();
+  };
+</script>
 </body>
 </html>
