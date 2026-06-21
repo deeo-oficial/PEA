@@ -1,5 +1,5 @@
 {
-  "name": "pea-feed-server",
+  "name": "pea-server",
   "version": "1.0.0",
   "description": "Servidor unificado HTTP e WebSocket para o PEA Feed",
   "main": "server.js",
