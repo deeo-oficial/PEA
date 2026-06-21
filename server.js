@@ -11,11 +11,12 @@ const MAX_MSG_BYTES = 64 * 1024; // 64KB por payload
 
 // Servidor HTTP integrado para servir o frontend na rede
 const server = http.createServer((req, res) => {
+  // Evitar caching agressivo durante o desenvolvimento/testes
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
-  // Rota principal: entrega o index.html direto
+  // 1. ROTA DO ROTEAMENTO PRINCIPAL (index.html)
   if (req.url === '/' || req.url === '/index.html') {
     const filePath = path.join(__dirname, 'index.html');
     fs.readFile(filePath, (err, content) => {
@@ -25,14 +26,30 @@ const server = http.createServer((req, res) => {
       }
       res.writeHead(200, { 
         'Content-Type': 'text/html; charset=UTF-8',
-        'Content-Security-Policy': "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' ws: wss:; img-src 'self' data:; base-uri 'none'; form-action 'none';"
+        'Content-Security-Policy': "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:;"
       });
       res.end(content);
     });
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('404 Not Found\n');
+    return;
+  } 
+
+  // 2. ROTA PARA O ARQUIVO JAVASCRIPT EXTERNO (script.js)
+  if (req.url === '/script.js') {
+    const filePath = path.join(__dirname, 'script.js');
+    fs.readFile(filePath, (err, content) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end('Erro: script.js nao encontrado no servidor.');
+      }
+      res.writeHead(200, { 'Content-Type': 'application/javascript; charset=UTF-8' });
+      res.end(content);
+    });
+    return;
   }
+
+  // 3. ROTA FALLBACK 404
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
+  res.end('404 Not Found\n');
 });
 
 // Gerenciador do Feed WebSocket (Broadcast unificado)
@@ -50,6 +67,7 @@ wss.on('connection', (ws) => {
 
     if (!msg || typeof msg.type !== 'string') return;
 
+    // Quando chega uma mensagem do feed, replica para TODOS os outros usuários conectados
     if (msg.type === 'feed_message' && msg.data) {
       const outboundPayload = JSON.stringify({
         type: 'feed_broadcast',
@@ -87,9 +105,9 @@ function getLocalIp() {
 server.listen(PORT, '0.0.0.0', () => {
   const localIp = getLocalIp();
   console.log('\x1b[32m%s\x1b[0m', '\n=================================================');
-  console.log('\x1b[32m%s\x1b[0m', '   PEA LIVE FEED - MULTIUSER ONLINE');
+  console.log('\x1b[32m%s\x1b[0m', '   PEA LIVE FEED - SERVER ACTIVE');
   console.log('\x1b[32m%s\x1b[0m', '=================================================');
-  console.log(`\n> Local (Nesta máquina): \x1b[36mhttp://localhost:${PORT}\x1b[0m`);
-  console.log(`> Na sua Rede Wi-Fi (Outros aparelhos): \x1b[36mhttp://${localIp}:${PORT}\x1b[0m`);
+  console.log(`\n> Local: \x1b[36mhttp://localhost:${PORT}\x1b[0m`);
+  console.log(`> Wi-Fi Local: \x1b[36mhttp://${localIp}:${PORT}\x1b[0m`);
   console.log('\x1b[32m%s\x1b[0m', '\n=================================================\n');
 });
