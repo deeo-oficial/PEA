@@ -17,7 +17,7 @@ const server = http.createServer((req, res) => {
 
   // Rota principal: entrega o pea.html direto
   if (req.url === '/' || req.url === '/index.html' || req.url === '/pea.html') {
-    const filePath = path.join(__dirname, 'pea.html');
+    const filePath = path.join(__dirname, 'index.html');
     fs.readFile(filePath, (err, content) => {
       if (err) {
         res.writeHead(500, { 'Content-Type': 'text/plain' });
