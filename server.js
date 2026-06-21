@@ -15,13 +15,13 @@ const server = http.createServer((req, res) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
-  // Rota principal: entrega o pea.html direto
-  if (req.url === '/' || req.url === '/index.html' || req.url === '/pea.html') {
+  // Rota principal: entrega o index.html direto
+  if (req.url === '/' || req.url === '/index.html') {
     const filePath = path.join(__dirname, 'index.html');
     fs.readFile(filePath, (err, content) => {
       if (err) {
         res.writeHead(500, { 'Content-Type': 'text/plain' });
-        return res.end('Erro interno ao carregar pea.html no servidor.');
+        return res.end('Erro interno ao carregar index.html no servidor.');
       }
       res.writeHead(200, { 
         'Content-Type': 'text/html; charset=UTF-8',
@@ -50,7 +50,6 @@ wss.on('connection', (ws) => {
 
     if (!msg || typeof msg.type !== 'string') return;
 
-    // Quando chega uma mensagem do feed, replica para TODOS os outros usuários conectados
     if (msg.type === 'feed_message' && msg.data) {
       const outboundPayload = JSON.stringify({
         type: 'feed_broadcast',
