@@ -48,7 +48,7 @@
   <div id="screenJoin">
     <div class="panel">
       <label>SEU NICKNAME</label>
-      <input type="text" id="usernameInput" maxlength="25" placeholder="Digite algo...">
+      <input type="text" id="usernameInput" maxlength="25" placeholder="Digite seu nickname aqui...">
       <div class="char-count" id="charCount">0/25</div>
     </div>
     <button class="action-btn" id="btnEnter">Entrar</button>
@@ -85,7 +85,7 @@
     ws = new WebSocket(wsUrl);
 
     ws.onopen = function() {
-      document.getElementById('statusText').textContent = 'Conectado ao Feed Global';
+      document.getElementById('statusText').textContent = 'Conectado.';
       document.getElementById('chatBox').style.display = 'flex';
       document.getElementById('sendRow').style.display = 'flex';
     };
