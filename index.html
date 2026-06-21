@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'none';
+  script-src 'self';
+  style-src 'unsafe-inline';
+  connect-src 'self' ws: wss:;
+  img-src 'self' data:;
+  base-uri 'none';
+  form-action 'none';
+">
+<title>PEA</title>
+<style>
+  :root {
+    --green: #1dc262; 
+    --green2: #17a854; 
+    --bg: #000; 
+    --text: #eaffea; 
+    --muted: #6b8f78;
+    --danger: #e05a5a; 
+    --panel: #0a0a0a; 
+    --line: #173b25;
+  }
+  * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+  }
+  body {
+    background: var(--bg); 
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    min-height: 100vh; 
+    padding: 20px;
+  }
+  .app { 
+    width: 100%; 
+    max-width: 500px; 
+    margin-top: 20px;
+  }
+  h1 { 
+    text-align: center; 
+    font-size: 26px; 
+    letter-spacing: 3px; 
+    margin-bottom: 24px; 
+    color: var(--green); 
+  }
+  .panel { 
+    background: var(--panel); 
+    border: 1px solid var(--line); 
+    border-radius: 8px; 
+    padding: 20px; 
+    margin-bottom: 14px; 
+  }
+  label {
+    display: block; 
+    font-size: 11px; 
+    color: var(--green); 
+    font-weight: bold; 
+    margin-bottom: 6px; 
+    text-transform: uppercase; 
+    letter-spacing: 1px;
+  }
+  input[type=text] {
+    width: 100%; 
+    background: #050505; 
+    color: var(--green); 
+    border: 1px solid var(--line);
+    border-radius: 4px; 
+    padding: 12px; 
+    font-size: 14px; 
+    margin-bottom: 6px; 
+    font-family: 'Courier New', monospace;
+    outline: none;
+  }
+  input[type=text]:focus {
+    border-color: var(--green);
+  }
+  input::placeholder { 
+    color: #1f4d33; 
+  }
+  .char-count {
+    font-size: 10px; 
+    color: var(--muted); 
+    text-align: right; 
+    margin-bottom: 16px;
+  }
+  .action-btn { 
+    width: 100%; 
+    background: var(--green); 
+    color: #000; 
+    border: none; 
+    padding: 14px; 
+    border-radius: 5px; 
+    font-weight: bold; 
+    font-size: 15px; 
+    cursor: pointer; 
+    transition: background .15s;
+  }
+  .action-btn:hover { 
+    background: var(--green2); 
+  }
+  .status { 
+    font-size: 12px; 
+    color: var(--muted); 
+    text-align: center; 
+    margin-bottom: 14px; 
+    min-height: 16px; 
+    font-family: 'Courier New', monospace;
+  }
+  .status.err { 
+    color: var(--danger); 
+  }
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .chat { 
+    height: 380px; 
+    overflow-y: auto; 
+    display: none; 
+    flex-direction: column; 
+    gap: 8px; 
+    padding-right: 4px;
+    margin-bottom: 14px;
+  }
+  /* Custom Scrollbar minimalista */
+  .chat::-webkit-scrollbar { width: 4px; }
+  .chat::-webkit-scrollbar-track { background: transparent; }
+  .chat::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+  
+  .msg {
+    max-width: 85%; 
+    padding: 8px 12px; 
+    border-radius: 8px; 
+    font-size: 13.5px; 
+    word-wrap: break-word;
+    line-height: 1.4;
+  }
+  .msg.me { 
+    align-self: flex-end; 
+    background: var(--green); 
+    color: #000; 
+  }
+  .msg.them { 
+    align-self: flex-start; 
+    background: var(--line); 
+    color: var(--green); 
+  }
+  .send-row { 
+    display: none; 
+    gap: 8px; 
+  }
+  .send-row input { 
+    margin-bottom: 0; 
+  }
+  .send-btn {
+    background: var(--green);
+    color: #000;
+    border: none;
+    padding: 0 16px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .send-btn:hover {
+    background: var(--green2);
+  }
+  .hidden { 
+    display: none !important; 
+  }
+  .adv-toggle {
+    font-size: 11px; 
+    color: var(--muted); 
+    text-decoration: underline; 
+    cursor: pointer; 
+    margin-top: 10px; 
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>PEA</h1>
+
+  <div id="screenRoomForm">
+    <div class="panel">
+      <label for="roomName">Seu Nickname</label>
+      <input type="text" id="roomName" maxlength="25" placeholder="Ex: Anonimo, Dev_X...">
+      <div class="char-count" id="roomNameCount">0/25</div>
+
+      <span class="adv-toggle" id="btnToggleAdvanced">Exibir endereço do servidor</span>
+      <div id="advancedBox" class="hidden" style="margin-top: 10px;">
+        <label for="serverUrl">Servidor WebSocket</label>
+        <input type="text" id="serverUrl" placeholder="ws://localhost:8080">
+      </div>
+    </div>
+    <button class="action-btn" id="btnGo">Entrar</button>
+  </div>
+
+  <div id="screenRoom" class="hidden">
+    <div class="status" id="statusText"></div>
+    
+    <div class="chat-container">
+      <div class="chat" id="chatBox"></div>
+      
+      <div class="send-row" id="sendRow">
+        <input type="text" id="msgInput" maxlength="2000" placeholder="Escreva...">
+        <button class="send-btn" id="btnSendMessage">Enviar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

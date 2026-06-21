@@ -1,0 +1,16 @@
+{
+  "name": "pea-feed-server",
+  "version": "1.0.0",
+  "description": "Servidor unificado HTTP e WebSocket para o PEA Feed",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT"
+}
