@@ -33,7 +33,7 @@
   .chat { height: 350px; overflow-y: auto; display: none; flex-direction: column; gap: 8px; padding-right: 4px; margin-bottom: 14px; }
   .chat::-webkit-scrollbar { width: 4px; }
   .chat::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
-  .msg { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 13.5px; word-wrap: break-word; line-height: 1.4; }
+  .msg { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 13.5px; word-wrap: break-word; line-height: 1.4; transition: opacity 0.5s ease; }
   .msg.me { align-self: flex-end; background: var(--green); color: #000; }
   .msg.them { align-self: flex-start; background: var(--line); color: var(--green); }
   .send-row { display: none; gap: 8px; }
@@ -119,6 +119,12 @@
     wrapper.querySelector('span').textContent = text;
     box.appendChild(wrapper);
     box.scrollTop = box.scrollHeight;
+
+    // Sistema de Autodestruição Efêmera (Remove o elemento do ecrã após 3 minutos)
+    setTimeout(() => {
+      wrapper.style.opacity = '0';
+      setTimeout(() => { wrapper.remove(); }, 500);
+    }, 180000);
   }
 
   function sendBroadcast() {
@@ -135,14 +141,12 @@
     input.value = '';
   }
 
-  // Monitorar input de texto do apelido
   document.getElementById('usernameInput').oninput = function(e) {
     const val = sanitize(e.target.value, 25);
     e.target.value = val;
     document.getElementById('charCount').textContent = val.length + '/25';
   };
 
-  // Evento definitivo do clique do botão entrar
   document.getElementById('btnEnter').onclick = function() {
     const nameVal = document.getElementById('usernameInput').value;
     myUsername = sanitize(nameVal, 25) || 'Anon_' + Math.floor(Math.random() * 9000 + 1000);
