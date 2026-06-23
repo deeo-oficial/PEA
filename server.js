@@ -27,10 +27,15 @@ const server = http.createServer((req, res) => {
 });
 
 const wss = new WebSocket.Server({ server });
-const connectedUsers = new Set();
 
 wss.on('connection', (ws) => {
-  connectedUsers.add(ws);
+  ws.isAlive = true;
+  
+  // Resposta ao Pong do cliente
+  ws.on('pong', () => {
+    ws.isAlive = true;
+  });
+
   ws.on('message', (raw) => {
     let msg;
     try { msg = JSON.parse(raw.toString()); } catch (_) { return; }
@@ -39,14 +44,26 @@ wss.on('connection', (ws) => {
         type: 'feed_broadcast',
         data: { user: msg.data.user, text: msg.data.text }
       });
-      for (const client of connectedUsers) {
+      for (const client of wss.clients) {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(outbound);
         }
       }
     }
   });
-  ws.on('close', () => { connectedUsers.delete(ws); });
+});
+
+// Intervalo de 30 segundos para verificar conexões fantasma (Heartbeat)
+const interval = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (ws.isAlive === false) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+
+wss.on('close', () => {
+  clearInterval(interval);
 });
 
 server.listen(PORT, '0.0.0.0', () => {
