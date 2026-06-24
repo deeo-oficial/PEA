@@ -7,7 +7,7 @@
 <style>
   :root {
     --green: #1dc262; --green2: #17a854; --bg: #000; --text: #eaffea; --muted: #6b8f78;
-    --danger: #e05a5a; --panel: #0a0a0a; --line: #173b25; --active: #174b2b;
+    --danger: #e05a5a; --panel: #0a0a0a; --line: #173b25; --active: #174b2b; --global-color: #2196f3;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -16,7 +16,7 @@
     display: flex; flex-direction: column; align-items: center;
     min-height: 100vh; padding: 10px;
   }
-  .app { width: 100%; max-width: 800px; margin-top: 10px; display: flex; flex-direction: column; height: 90vh; }
+  .app { width: 100%; max-width: 850px; margin-top: 10px; display: flex; flex-direction: column; height: 90vh; }
   h1 { text-align: center; font-size: 24px; letter-spacing: 3px; margin-bottom: 15px; color: var(--green); }
   
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; text-align: center; max-width: 400px; margin: 50px auto 0 auto; width: 100%; }
@@ -26,14 +26,15 @@
     border-radius: 4px; padding: 12px; font-size: 14px; margin-bottom: 6px; font-family: monospace; outline: none;
   }
   .action-btn { width: 100%; background: var(--green); color: #000; border: none; padding: 14px; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; }
-  .action-btn:hover { background: var(--green2); }
   
-  /* Layout Split do Chat */
+  /* Layout Split */
   .chat-wrapper { display: flex; flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; height: 100%; }
   
-  /* Barra Lateral de Usuários */
-  .sidebar { width: 220px; border-right: 1px solid var(--line); display: flex; flex-direction: column; background: #040404; }
-  .search-box { padding: 10px; border-bottom: 1px solid var(--line); }
+  /* Barra Lateral */
+  .sidebar { width: 240px; border-right: 1px solid var(--line); display: flex; flex-direction: column; background: #040404; }
+  .global-tab { padding: 12px; margin: 5px; background: #0e1e14; border: 1px dashed var(--green); border-radius: 4px; text-align: center; font-weight: bold; cursor: pointer; font-size: 13px; color: var(--green); }
+  .global-tab.selected { background: var(--active); border-style: solid; color: #fff; }
+  .search-box { padding: 8px 5px; border-bottom: 1px solid var(--line); margin: 0 5px; }
   .search-box input { padding: 8px; font-size: 12px; margin-bottom: 0; }
   .user-list { flex: 1; overflow-y: auto; padding: 5px; display: flex; flex-direction: column; gap: 4px; }
   .user-item { padding: 10px; border-radius: 4px; font-size: 13px; cursor: pointer; word-break: break-all; border: 1px solid transparent; }
@@ -48,44 +49,48 @@
   .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 13.5px; word-wrap: break-word; line-height: 1.4; }
   .msg.me { align-self: flex-end; background: var(--green); color: #000; }
   .msg.them { align-self: flex-start; background: var(--line); color: var(--green); }
+  .msg.global-type { border-left: 3px solid var(--global-color); }
   .msg.system { align-self: center; background: transparent; color: var(--muted); font-size: 11px; font-family: monospace; }
 
   .send-row { padding: 10px; display: flex; gap: 8px; border-top: 1px solid var(--line); background: #040404; }
   .send-btn { background: var(--green); color: #000; border: none; padding: 0 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
   
   .hidden { display: none !important; }
-  .status-bar { font-size: 11px; text-align: center; padding: 4px; color: var(--muted); font-family: monospace; }
+  .status-bar { font-size: 11px; text-align: center; padding: 6px; color: var(--muted); font-family: monospace; border-top: 1px solid var(--line); }
 </style>
 </head>
 <body>
 <div class="app">
   <h1>PEA</h1>
 
-  <!-- TELA DE LOGIN -->
+  <!-- LOGIN -->
   <div id="screenJoin" class="panel">
-    <label>Adicione seu Nickname</label>
-    <input type="text" id="usernameInput" maxlength="20" placeholder="Ex: usuárior#123...">
+    <label>Seu Nickname aqui:</label>
+    <input type="text" id="usernameInput" maxlength="20" placeholder="Ex: Usuário#123...">
     <div id="loginError" style="color: var(--danger); font-size: 12px; margin-bottom: 10px; min-height: 15px;"></div>
-    <button class="action-btn" id="btnEnter">Entrar</button>
+    <button class="action-btn" id="btnEnter">Entrar no Sistema</button>
   </div>
 
-  <!-- INTERFACE DO CHAT COMPLETO -->
+  <!-- CONTAINER PRINCIPAL -->
   <div id="screenFeed" class="chat-wrapper hidden">
     <!-- BARRA LATERAL -->
     <div class="sidebar">
+      <!-- Aba Fixa do Feed Global -->
+      <div class="global-tab" id="tabGlobal">CHAT GLOBAL</div>
+      
       <div class="search-box">
-        <input type="text" id="searchUser" placeholder="Buscar usuário...">
+        <input type="text" id="searchUser" placeholder="Filtrar usuários...">
       </div>
       <div class="user-list" id="usersContainer"></div>
       <div class="status-bar" id="statusText">Conectando...</div>
     </div>
 
-    <!-- ÁREA DE MENSAGENS -->
+    <!-- CHAT BOX -->
     <div class="main-chat">
-      <div class="chat-header" id="chatTargetHeader">Selecione um usuário</div>
+      <div class="chat-header" id="chatTargetHeader">Selecione uma aba ou usuário na lateral</div>
       <div class="chat-box" id="chatBox"></div>
       <div class="send-row">
-        <input type="text" id="msgInput" maxlength="1500" placeholder="Selecione um usuário..." disabled>
+        <input type="text" id="msgInput" maxlength="1500" placeholder="Selecione um chat..." disabled>
         <button class="send-btn" id="btnSend" disabled>Enviar</button>
       </div>
     </div>
@@ -97,11 +102,13 @@
 
   let ws = null;
   let myUsername = '';
-  let activeTarget = null; // Guarda com quem você está conversando no momento
-  let allOnlineUsers = []; // Cache local da lista vinda do servidor
+  let activeTarget = 'GLOBAL'; // Inicializa direto na aba Global
+  let allOnlineUsers = []; 
   
-  // Banco de dados em memória local para armazenar conversas separadas por usuário: { "nick": [{from, text, class}] }
-  const privateHistories = {};
+  // Repositório de Histórico Isolado: armazena as mensagens do 'GLOBAL' e de cada usuário individualmente
+  const chatHistories = {
+    'GLOBAL': []
+  };
 
   function sanitize(str, max) {
     if (typeof str !== 'string') return '';
@@ -114,29 +121,24 @@
     ws = new WebSocket(protocol + '//' + window.location.host);
 
     ws.onopen = function() {
-      // Solicita autenticação do nick imediatamente
       ws.send(JSON.stringify({ type: 'login', nick: proposedNick }));
     };
 
-    ws.onerror = function() {
-      document.getElementById('statusText').textContent = 'Erro na rede.';
-    };
-
-    ws.onclose = function() {
-      document.getElementById('statusText').textContent = 'Desconectado.';
-    };
+    ws.onerror = function() { document.getElementById('statusText').textContent = 'Erro de rede.'; };
+    ws.onclose = function() { document.getElementById('statusText').textContent = 'Desconectado.'; };
 
     ws.onmessage = function(event) {
       let payload;
       try { payload = JSON.parse(event.data); } catch(_) { return; }
 
-      // 1. RESPOSTA DO LOGIN DO SERVIDOR
+      // 1. CONFIRMAÇÃO DE LOGIN
       if (payload.type === 'login_response') {
         if (payload.success) {
           myUsername = payload.nick;
           document.getElementById('screenJoin').classList.add('hidden');
           document.getElementById('screenFeed').classList.remove('hidden');
           document.getElementById('statusText').textContent = 'Online: ' + myUsername;
+          switchTarget('GLOBAL'); // Abre o Feed Global como padrão inicial
         } else {
           document.getElementById('loginError').textContent = payload.reason;
           ws.close();
@@ -144,29 +146,40 @@
         return;
       }
 
-      // 2. RECEBIMENTO DA LISTA ATUALIZADA DE ONLINE
+      // 2. LISTA DE USUÁRIOS ONLINE
       if (payload.type === 'user_list') {
-        // Filtra para remover você mesmo da lista de contatos
         allOnlineUsers = payload.users.filter(u => u !== myUsername);
         renderUserList();
         return;
       }
 
-      // 3. RECEBIMENTO DE MENSAGEM PRIVADA DE ALGUÉM
+      // 3. RECEBIMENTO DE MENSAGEM DO FEED GLOBAL
+      if (payload.type === 'global_msg_receive') {
+        const fromUser = payload.from;
+        const text = sanitize(payload.text, 1500);
+
+        const isMe = fromUser === myUsername;
+        chatHistories['GLOBAL'].push({ from: fromUser, text: text, className: isMe ? 'me' : 'them global-type' });
+
+        if (activeTarget === 'GLOBAL') {
+          appendMessageToDOM(fromUser, text, isMe ? 'me' : 'them global-type');
+        } else {
+          // Destaca visualmente a aba global se o usuário estiver em uma DM privada
+          document.getElementById('tabGlobal').style.borderColor = 'var(--global-color)';
+        }
+      }
+
+      // 4. RECEBIMENTO DE MENSAGEM PRIVADA
       if (payload.type === 'private_msg_receive') {
         const fromUser = payload.from;
         const text = sanitize(payload.text, 1500);
 
-        // Inicializa histórico se não existir
-        if (!privateHistories[fromUser]) privateHistories[fromUser] = [];
-        
-        privateHistories[fromUser].push({ from: fromUser, text: text, className: 'them' });
+        if (!chatHistories[fromUser]) chatHistories[fromUser] = [];
+        chatHistories[fromUser].push({ from: fromUser, text: text, className: 'them' });
 
-        // Se a conversa aberta for a desse usuário, renderiza na tela imediatamente
         if (activeTarget === fromUser) {
           appendMessageToDOM(fromUser, text, 'them');
         } else {
-          // Efeito visual sutil: Avisa na lista lateral que há mensagens novas pendentes
           const item = document.getElementById(`useritem-${fromUser}`);
           if (item) item.style.borderColor = 'var(--danger)';
         }
@@ -174,7 +187,6 @@
     };
   }
 
-  // Renderiza e filtra a lista de usuários online baseada na barra de pesquisa
   function renderUserList() {
     const container = document.getElementById('usersContainer');
     const searchTerm = document.getElementById('searchUser').value.toLowerCase().trim();
@@ -182,52 +194,55 @@
 
     const filtered = allOnlineUsers.filter(user => user.toLowerCase().includes(searchTerm));
 
-    if (filtered.length === 0) {
-      container.innerHTML = '<div class="msg system">Ninguém online</div>';
-      return;
-    }
-
     filtered.forEach(user => {
       const div = document.createElement('div');
       div.className = 'user-item' + (activeTarget === user ? ' selected' : '');
       div.id = `useritem-${user}`;
       div.textContent = user;
-      
-      div.onclick = function() {
-        switchChatTarget(user);
-      };
+      div.onclick = function() { switchTarget(user); };
       container.appendChild(div);
     });
   }
 
-  // Altera o canal de conversa ativa
-  function switchChatTarget(targetNick) {
-    activeTarget = targetNick;
+  // Alterna o foco do chat (Pode receber 'GLOBAL' ou o Nickname de alguém)
+  function switchTarget(target) {
+    activeTarget = target;
     
-    // Atualiza classes visuais na lista lateral
+    // Reseta destaques visuais das seleções
+    document.getElementById('tabGlobal').classList.remove('selected');
     document.querySelectorAll('.user-item').forEach(el => el.classList.remove('selected'));
-    const currentItem = document.getElementById(`useritem-${targetNick}`);
-    if (currentItem) {
-      currentItem.classList.add('selected');
-      currentItem.style.borderColor = 'transparent'; // Remove alerta se houver
+
+    if (target === 'GLOBAL') {
+      document.getElementById('tabGlobal').classList.add('selected');
+      document.getElementById('tabGlobal').style.borderColor = 'var(--green)';
+      document.getElementById('chatTargetHeader').textContent = '🌐 FEED GLOBAL (Mensagens Públicas)';
+      document.getElementById('msgInput').placeholder = 'Enviar mensagem pública para o feed...';
+    } else {
+      const currentItem = document.getElementById(`useritem-${target}`);
+      if (currentItem) {
+        currentItem.classList.add('selected');
+        currentItem.style.borderColor = 'transparent';
+      }
+      document.getElementById('chatTargetHeader').textContent = '🔒 CONVERSA PRIVADA COM: ' + target;
+      document.getElementById('msgInput').placeholder = `Enviar DM secreta para ${target}...`;
     }
 
-    // Libera inputs
-    document.getElementById('chatTargetHeader').textContent = 'Conversando no privado com: ' + targetNick;
+    // Libera a barra de entrada
     document.getElementById('msgInput').disabled = false;
     document.getElementById('btnSend').disabled = false;
-    document.getElementById('msgInput').placeholder = `Enviar DM para ${targetNick}...`;
 
-    // Limpa o DOM do chat e recarrega o histórico dessa conversa específica
+    // Reconstrói a tela com o histórico específico selecionado
     const box = document.getElementById('chatBox');
     box.innerHTML = '';
     
-    if (privateHistories[targetNick]) {
-      privateHistories[targetNick].forEach(msg => {
+    if (!chatHistories[target]) chatHistories[target] = [];
+    
+    if (chatHistories[target].length === 0) {
+      box.innerHTML = `<div class="msg system">Início do canal histórico com ${target}</div>`;
+    } else {
+      chatHistories[target].forEach(msg => {
         appendMessageToDOM(msg.from, msg.text, msg.className);
       });
-    } else {
-      box.innerHTML = `<div class="msg system">Início do histórico criptografado com ${targetNick}</div>`;
     }
   }
 
@@ -236,33 +251,35 @@
     const wrapper = document.createElement('div');
     wrapper.className = 'msg ' + className;
     wrapper.innerHTML = '<strong></strong> <span></span>';
-    wrapper.querySelector('strong').textContent = className === 'me' ? 'Você: ' : user + ': ';
+    wrapper.querySelector('strong').textContent = user === myUsername ? 'Você: ' : user + ': ';
     wrapper.querySelector('span').textContent = text;
     box.appendChild(wrapper);
     box.scrollTop = box.scrollHeight;
   }
 
-  function sendPrivateMessage() {
+  function sendMessage() {
     const input = document.getElementById('msgInput');
     const text = sanitize(input.value, 1500);
     if (!text || !activeTarget || !ws || ws.readyState !== WebSocket.OPEN) return;
 
-    // Envia o payload direcionado
+    // Despacha o payload identificando o destinatário ('GLOBAL' ou o Nickname do alvo)
     ws.send(JSON.stringify({
-      type: 'private_message',
+      type: 'chat_message',
       to: activeTarget,
       text: text
     }));
 
-    // Salva no histórico próprio local
-    if (!privateHistories[activeTarget]) privateHistories[activeTarget] = [];
-    privateHistories[activeTarget].push({ from: myUsername, text: text, className: 'me' });
+    // Se for privado, adicionamos localmente no histórico (mensagens do feed global voltam via broadcast para o próprio remetente)
+    if (activeTarget !== 'GLOBAL') {
+      if (!chatHistories[activeTarget]) chatHistories[activeTarget] = [];
+      chatHistories[activeTarget].push({ from: myUsername, text: text, className: 'me' });
+      appendMessageToDOM(myUsername, text, 'me');
+    }
 
-    appendMessageToDOM(myUsername, text, 'me');
     input.value = '';
   }
 
-  // Listeners de Interface
+  // Eventos de Input/Clicks
   document.getElementById('btnEnter').onclick = function() {
     const nick = sanitize(document.getElementById('usernameInput').value, 20);
     if (!nick) {
@@ -272,12 +289,10 @@
     initWebSocket(nick);
   };
 
+  document.getElementById('tabGlobal').onclick = function() { switchTarget('GLOBAL'); };
   document.getElementById('searchUser').oninput = renderUserList;
-
-  document.getElementById('btnSend').onclick = sendPrivateMessage;
-  document.getElementById('msgInput').onkeydown = function(e) {
-    if (e.key === 'Enter') sendPrivateMessage();
-  };
+  document.getElementById('btnSend').onclick = sendMessage;
+  document.getElementById('msgInput').onkeydown = function(e) { if (e.key === 'Enter') sendMessage(); };
 </script>
 </body>
 </html>
