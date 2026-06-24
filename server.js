@@ -31,7 +31,7 @@ const wss = new WebSocket.Server({ server });
 // Mapeamento de usuários ativos: Nickname -> WebSocket
 const activeUsers = new Map();
 
-// Função para transmitir a lista de usuários online atualizada para todos
+// Transmite a lista de nicks atualizada para todos os conectados
 function broadcastUserList() {
   const listPayload = JSON.stringify({
     type: 'user_list',
@@ -55,12 +55,13 @@ wss.on('connection', (ws) => {
     try { msg = JSON.parse(raw.toString()); } catch (_) { return; }
     if (!msg || typeof msg.type !== 'string') return;
 
-    // 1. TENTATIVA DE LOGIN (Validação de Nick Único)
+    // 1. LOGIN DE USUÁRIO (Garantia de Nick Único)
     if (msg.type === 'login') {
       const targetNick = msg.nick ? msg.nick.trim() : '';
       
-      if (!targetNick || activeUsers.has(targetNick)) {
-        ws.send(JSON.stringify({ type: 'login_response', success: false, reason: 'Nick já em uso ou inválido.' }));
+      // Bloqueia nicks vazios, duplicados ou termos reservados do sistema
+      if (!targetNick || activeUsers.has(targetNick) || targetNick.toLowerCase() === 'global') {
+        ws.send(JSON.stringify({ type: 'login_response', success: false, reason: 'Nick inválido, reservado ou já em uso.' }));
         return;
       }
 
@@ -68,22 +69,39 @@ wss.on('connection', (ws) => {
       activeUsers.set(targetNick, ws);
       
       ws.send(JSON.stringify({ type: 'login_response', success: true, nick: targetNick }));
-      broadcastUserList(); // Atualiza a barra lateral de todo mundo
+      broadcastUserList();
       return;
     }
 
-    // Se o usuário tentar mandar algo sem estar logado, ignora
     if (!ws.authenticatedNick) return;
 
-    // 2. ROTEAMENTO DE MENSAGEM PRIVADA
-    if (msg.type === 'private_message' && msg.to && msg.text) {
-      const targetClient = activeUsers.get(msg.to);
-      if (targetClient && targetClient.readyState === WebSocket.OPEN) {
-        targetClient.send(JSON.stringify({
-          type: 'private_msg_receive',
+    // 2. ROTEAMENTO DE MENSAGENS (MODO HÍBRIDO)
+    if (msg.type === 'chat_message' && msg.text) {
+      const textClean = msg.text.trim();
+      
+      if (msg.to === 'GLOBAL') {
+        // Modo Feed Global: Envia em broadcast para TODOS os usuários ativos na plataforma
+        const globalPayload = JSON.stringify({
+          type: 'global_msg_receive',
           from: ws.authenticatedNick,
-          text: msg.text
-        }));
+          text: textClean
+        });
+        
+        for (const client of activeUsers.values()) {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(globalPayload);
+          }
+        }
+      } else if (msg.to) {
+        // Modo Privado (DM): Envia apenas para o alvo específico
+        const targetClient = activeUsers.get(msg.to);
+        if (targetClient && targetClient.readyState === WebSocket.OPEN) {
+          targetClient.send(JSON.stringify({
+            type: 'private_msg_receive',
+            from: ws.authenticatedNick,
+            text: textClean
+          }));
+        }
       }
     }
   });
@@ -91,7 +109,7 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     if (ws.authenticatedNick) {
       activeUsers.delete(ws.authenticatedNick);
-      broadcastUserList(); // Atualiza a barra lateral após a saída
+      broadcastUserList();
     }
   });
 });
@@ -110,5 +128,5 @@ const interval = setInterval(() => {
 wss.on('close', () => { clearInterval(interval); });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor de Chat Privado PEA ativo na porta ${PORT}`);
+  console.log(`Servidor PEA (Global + Privado) rodando na porta ${PORT}`);
 });
