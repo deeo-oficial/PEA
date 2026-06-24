@@ -215,16 +215,16 @@
     if (target === 'GLOBAL') {
       document.getElementById('tabGlobal').classList.add('selected');
       document.getElementById('tabGlobal').style.borderColor = 'var(--green)';
-      document.getElementById('chatTargetHeader').textContent = '🌐 FEED GLOBAL (Mensagens Públicas)';
-      document.getElementById('msgInput').placeholder = 'Enviar mensagem pública para o feed...';
+      document.getElementById('chatTargetHeader').textContent = 'CHAT GLOBAL';
+      document.getElementById('msgInput').placeholder = 'Enviar mensagem pública...';
     } else {
       const currentItem = document.getElementById(`useritem-${target}`);
       if (currentItem) {
         currentItem.classList.add('selected');
         currentItem.style.borderColor = 'transparent';
       }
-      document.getElementById('chatTargetHeader').textContent = '🔒 CONVERSA PRIVADA COM: ' + target;
-      document.getElementById('msgInput').placeholder = `Enviar DM secreta para ${target}...`;
+      document.getElementById('chatTargetHeader').textContent = 'CONVERSA PRIVADA COM: ' + target;
+      document.getElementById('msgInput').placeholder = `Enviar mensagem secreta para ${target}...`;
     }
 
     // Libera a barra de entrada
