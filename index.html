@@ -7,60 +7,86 @@
 <style>
   :root {
     --green: #1dc262; --green2: #17a854; --bg: #000; --text: #eaffea; --muted: #6b8f78;
-    --danger: #e05a5a; --panel: #0a0a0a; --line: #173b25;
+    --danger: #e05a5a; --panel: #0a0a0a; --line: #173b25; --active: #174b2b;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: var(--bg); color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, sans-serif;
     display: flex; flex-direction: column; align-items: center;
-    min-height: 100vh; padding: 20px;
+    min-height: 100vh; padding: 10px;
   }
-  .app { width: 100%; max-width: 480px; margin-top: 10px; }
-  h1 { text-align: center; font-size: 24px; letter-spacing: 3px; margin-bottom: 20px; color: var(--green); }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; margin-bottom: 14px; }
-  label { display: block; font-size: 11px; color: var(--green); font-weight: bold; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .app { width: 100%; max-width: 800px; margin-top: 10px; display: flex; flex-direction: column; height: 90vh; }
+  h1 { text-align: center; font-size: 24px; letter-spacing: 3px; margin-bottom: 15px; color: var(--green); }
+  
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; text-align: center; max-width: 400px; margin: 50px auto 0 auto; width: 100%; }
+  label { display: block; font-size: 11px; color: var(--green); font-weight: bold; margin-bottom: 6px; text-transform: uppercase; }
   input[type=text] {
     width: 100%; background: #050505; color: var(--green); border: 1px solid var(--line);
-    border-radius: 4px; padding: 12px; font-size: 14px; margin-bottom: 6px; font-family: 'Courier New', monospace; outline: none;
+    border-radius: 4px; padding: 12px; font-size: 14px; margin-bottom: 6px; font-family: monospace; outline: none;
   }
-  .char-count { font-size: 10px; color: var(--muted); text-align: right; margin-bottom: 14px; }
   .action-btn { width: 100%; background: var(--green); color: #000; border: none; padding: 14px; border-radius: 5px; font-weight: bold; font-size: 15px; cursor: pointer; }
   .action-btn:hover { background: var(--green2); }
-  .status { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 14px; min-height: 16px; font-family: 'Courier New', monospace; }
-  .status.err { color: var(--danger); }
-  .chat-container { display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
-  .chat { height: 350px; overflow-y: auto; display: none; flex-direction: column; gap: 8px; padding-right: 4px; margin-bottom: 14px; }
-  .chat::-webkit-scrollbar { width: 4px; }
-  .chat::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
-  .msg { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 13.5px; word-wrap: break-word; line-height: 1.4; transition: opacity 0.5s ease; }
+  
+  /* Layout Split do Chat */
+  .chat-wrapper { display: flex; flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; height: 100%; }
+  
+  /* Barra Lateral de Usuários */
+  .sidebar { width: 220px; border-right: 1px solid var(--line); display: flex; flex-direction: column; background: #040404; }
+  .search-box { padding: 10px; border-bottom: 1px solid var(--line); }
+  .search-box input { padding: 8px; font-size: 12px; margin-bottom: 0; }
+  .user-list { flex: 1; overflow-y: auto; padding: 5px; display: flex; flex-direction: column; gap: 4px; }
+  .user-item { padding: 10px; border-radius: 4px; font-size: 13px; cursor: pointer; word-break: break-all; border: 1px solid transparent; }
+  .user-item:hover { background: var(--line); }
+  .user-item.selected { background: var(--active); border-color: var(--green); color: #fff; font-weight: bold; }
+  
+  /* Área Principal do Chat */
+  .main-chat { flex: 1; display: flex; flex-direction: column; background: var(--panel); }
+  .chat-header { padding: 12px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--green); font-family: monospace; background: #040404; }
+  .chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+  
+  .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 13.5px; word-wrap: break-word; line-height: 1.4; }
   .msg.me { align-self: flex-end; background: var(--green); color: #000; }
   .msg.them { align-self: flex-start; background: var(--line); color: var(--green); }
-  .send-row { display: none; gap: 8px; }
-  .send-btn { background: var(--green); color: #000; border: none; padding: 0 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+  .msg.system { align-self: center; background: transparent; color: var(--muted); font-size: 11px; font-family: monospace; }
+
+  .send-row { padding: 10px; display: flex; gap: 8px; border-top: 1px solid var(--line); background: #040404; }
+  .send-btn { background: var(--green); color: #000; border: none; padding: 0 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+  
   .hidden { display: none !important; }
+  .status-bar { font-size: 11px; text-align: center; padding: 4px; color: var(--muted); font-family: monospace; }
 </style>
 </head>
 <body>
 <div class="app">
   <h1>PEA</h1>
 
-  <div id="screenJoin">
-    <div class="panel">
-      <label>SEU NICKNAME</label>
-      <input type="text" id="usernameInput" maxlength="25" placeholder="Digite seu nickname aqui...">
-      <div class="char-count" id="charCount">0/25</div>
-    </div>
+  <!-- TELA DE LOGIN -->
+  <div id="screenJoin" class="panel">
+    <label>Escolha seu Nickname único</label>
+    <input type="text" id="usernameInput" maxlength="20" placeholder="Ex: usuárior#123...">
+    <div id="loginError" style="color: var(--danger); font-size: 12px; margin-bottom: 10px; min-height: 15px;"></div>
     <button class="action-btn" id="btnEnter">Entrar</button>
   </div>
 
-  <div id="screenFeed" class="hidden">
-    <div class="status" id="statusText">Conectando...</div>
-    <div class="chat-container">
-      <div class="chat" id="chatBox"></div>
-      <div class="send-row" id="sendRow">
-        <input type="text" id="msgInput" maxlength="2000" placeholder="Escreva uma mensagem...">
-        <button class="send-btn" id="btnSend">Enviar</button>
+  <!-- INTERFACE DO CHAT COMPLETO -->
+  <div id="screenFeed" class="chat-wrapper hidden">
+    <!-- BARRA LATERAL -->
+    <div class="sidebar">
+      <div class="search-box">
+        <input type="text" id="searchUser" placeholder="Buscar usuário...">
+      </div>
+      <div class="user-list" id="usersContainer"></div>
+      <div class="status-bar" id="statusText">Conectando...</div>
+    </div>
+
+    <!-- ÁREA DE MENSAGENS -->
+    <div class="main-chat">
+      <div class="chat-header" id="chatTargetHeader">Selecione alguém na barra lateral para conversar</div>
+      <div class="chat-box" id="chatBox"></div>
+      <div class="send-row">
+        <input type="text" id="msgInput" maxlength="1500" placeholder="Selecione um usuário primeiro..." disabled>
+        <button class="send-btn" id="btnSend" disabled>Enviar</button>
       </div>
     </div>
   </div>
@@ -71,6 +97,11 @@
 
   let ws = null;
   let myUsername = '';
+  let activeTarget = null; // Guarda com quem você está conversando no momento
+  let allOnlineUsers = []; // Cache local da lista vinda do servidor
+  
+  // Banco de dados em memória local para armazenar conversas separadas por usuário: { "nick": [{from, text, class}] }
+  const privateHistories = {};
 
   function sanitize(str, max) {
     if (typeof str !== 'string') return '';
@@ -78,88 +109,174 @@
     return max ? clean.slice(0, max) : clean;
   }
 
-  function initWebSocket() {
+  function initWebSocket(proposedNick) {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = protocol + '//' + window.location.host;
-
-    ws = new WebSocket(wsUrl);
+    ws = new WebSocket(protocol + '//' + window.location.host);
 
     ws.onopen = function() {
-      document.getElementById('statusText').textContent = 'Conectado.';
-      document.getElementById('chatBox').style.display = 'flex';
-      document.getElementById('sendRow').style.display = 'flex';
+      // Solicita autenticação do nick imediatamente
+      ws.send(JSON.stringify({ type: 'login', nick: proposedNick }));
     };
 
     ws.onerror = function() {
-      document.getElementById('statusText').textContent = 'Erro de conexão.';
+      document.getElementById('statusText').textContent = 'Erro na rede.';
     };
 
     ws.onclose = function() {
-      document.getElementById('statusText').textContent = 'Conexão encerrada.';
-      document.getElementById('sendRow').style.display = 'none';
+      document.getElementById('statusText').textContent = 'Desconectado.';
     };
 
     ws.onmessage = function(event) {
       let payload;
       try { payload = JSON.parse(event.data); } catch(_) { return; }
 
-      if (payload && payload.type === 'feed_broadcast' && payload.data) {
-        printMessage(sanitize(payload.data.user, 25), sanitize(payload.data.text, 2000), 'them');
+      // 1. RESPOSTA DO LOGIN DO SERVIDOR
+      if (payload.type === 'login_response') {
+        if (payload.success) {
+          myUsername = payload.nick;
+          document.getElementById('screenJoin').classList.add('hidden');
+          document.getElementById('screenFeed').classList.remove('hidden');
+          document.getElementById('statusText').textContent = 'Online: ' + myUsername;
+        } else {
+          document.getElementById('loginError').textContent = payload.reason;
+          ws.close();
+        }
+        return;
+      }
+
+      // 2. RECEBIMENTO DA LISTA ATUALIZADA DE ONLINE
+      if (payload.type === 'user_list') {
+        // Filtra para remover você mesmo da lista de contatos
+        allOnlineUsers = payload.users.filter(u => u !== myUsername);
+        renderUserList();
+        return;
+      }
+
+      // 3. RECEBIMENTO DE MENSAGEM PRIVADA DE ALGUÉM
+      if (payload.type === 'private_msg_receive') {
+        const fromUser = payload.from;
+        const text = sanitize(payload.text, 1500);
+
+        // Inicializa histórico se não existir
+        if (!privateHistories[fromUser]) privateHistories[fromUser] = [];
+        
+        privateHistories[fromUser].push({ from: fromUser, text: text, className: 'them' });
+
+        // Se a conversa aberta for a desse usuário, renderiza na tela imediatamente
+        if (activeTarget === fromUser) {
+          appendMessageToDOM(fromUser, text, 'them');
+        } else {
+          // Efeito visual sutil: Avisa na lista lateral que há mensagens novas pendentes
+          const item = document.getElementById(`useritem-${fromUser}`);
+          if (item) item.style.borderColor = 'var(--danger)';
+        }
       }
     };
   }
 
-  function printMessage(user, text, className) {
+  // Renderiza e filtra a lista de usuários online baseada na barra de pesquisa
+  function renderUserList() {
+    const container = document.getElementById('usersContainer');
+    const searchTerm = document.getElementById('searchUser').value.toLowerCase().trim();
+    container.innerHTML = '';
+
+    const filtered = allOnlineUsers.filter(user => user.toLowerCase().includes(searchTerm));
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="msg system">Ninguém online</div>';
+      return;
+    }
+
+    filtered.forEach(user => {
+      const div = document.createElement('div');
+      div.className = 'user-item' + (activeTarget === user ? ' selected' : '');
+      div.id = `useritem-${user}`;
+      div.textContent = user;
+      
+      div.onclick = function() {
+        switchChatTarget(user);
+      };
+      container.appendChild(div);
+    });
+  }
+
+  // Altera o canal de conversa ativa
+  function switchChatTarget(targetNick) {
+    activeTarget = targetNick;
+    
+    // Atualiza classes visuais na lista lateral
+    document.querySelectorAll('.user-item').forEach(el => el.classList.remove('selected'));
+    const currentItem = document.getElementById(`useritem-${targetNick}`);
+    if (currentItem) {
+      currentItem.classList.add('selected');
+      currentItem.style.borderColor = 'transparent'; // Remove alerta se houver
+    }
+
+    // Libera inputs
+    document.getElementById('chatTargetHeader').textContent = 'Conversando no privado com: ' + targetNick;
+    document.getElementById('msgInput').disabled = false;
+    document.getElementById('btnSend').disabled = false;
+    document.getElementById('msgInput').placeholder = `Enviar DM para ${targetNick}...`;
+
+    // Limpa o DOM do chat e recarrega o histórico dessa conversa específica
     const box = document.getElementById('chatBox');
-    if (!box) return;
+    box.innerHTML = '';
+    
+    if (privateHistories[targetNick]) {
+      privateHistories[targetNick].forEach(msg => {
+        appendMessageToDOM(msg.from, msg.text, msg.className);
+      });
+    } else {
+      box.innerHTML = `<div class="msg system">Início do histórico criptografado com ${targetNick}</div>`;
+    }
+  }
+
+  function appendMessageToDOM(user, text, className) {
+    const box = document.getElementById('chatBox');
     const wrapper = document.createElement('div');
     wrapper.className = 'msg ' + className;
     wrapper.innerHTML = '<strong></strong> <span></span>';
-    wrapper.querySelector('strong').textContent = user ? user + ': ' : '';
+    wrapper.querySelector('strong').textContent = className === 'me' ? 'Você: ' : user + ': ';
     wrapper.querySelector('span').textContent = text;
     box.appendChild(wrapper);
     box.scrollTop = box.scrollHeight;
-
-    // Sistema de Autodestruição Efêmera (Remove o elemento do ecrã após 3 minutos)
-    setTimeout(() => {
-      wrapper.style.opacity = '0';
-      setTimeout(() => { wrapper.remove(); }, 500);
-    }, 180000);
   }
 
-  function sendBroadcast() {
+  function sendPrivateMessage() {
     const input = document.getElementById('msgInput');
-    const text = sanitize(input.value, 2000);
-    if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+    const text = sanitize(input.value, 1500);
+    if (!text || !activeTarget || !ws || ws.readyState !== WebSocket.OPEN) return;
 
+    // Envia o payload direcionado
     ws.send(JSON.stringify({
-      type: 'feed_message',
-      data: { user: myUsername, text: text }
+      type: 'private_message',
+      to: activeTarget,
+      text: text
     }));
 
-    printMessage(myUsername, text, 'me');
+    // Salva no histórico próprio local
+    if (!privateHistories[activeTarget]) privateHistories[activeTarget] = [];
+    privateHistories[activeTarget].push({ from: myUsername, text: text, className: 'me' });
+
+    appendMessageToDOM(myUsername, text, 'me');
     input.value = '';
   }
 
-  document.getElementById('usernameInput').oninput = function(e) {
-    const val = sanitize(e.target.value, 25);
-    e.target.value = val;
-    document.getElementById('charCount').textContent = val.length + '/25';
-  };
-
+  // Listeners de Interface
   document.getElementById('btnEnter').onclick = function() {
-    const nameVal = document.getElementById('usernameInput').value;
-    myUsername = sanitize(nameVal, 25) || 'Anon_' + Math.floor(Math.random() * 9000 + 1000);
-
-    document.getElementById('screenJoin').classList.add('hidden');
-    document.getElementById('screenFeed').classList.remove('hidden');
-
-    initWebSocket();
+    const nick = sanitize(document.getElementById('usernameInput').value, 20);
+    if (!nick) {
+      document.getElementById('loginError').textContent = 'Insira um nick válido.';
+      return;
+    }
+    initWebSocket(nick);
   };
 
-  document.getElementById('btnSend').onclick = sendBroadcast;
+  document.getElementById('searchUser').oninput = renderUserList;
+
+  document.getElementById('btnSend').onclick = sendPrivateMessage;
   document.getElementById('msgInput').onkeydown = function(e) {
-    if (e.key === 'Enter') sendBroadcast();
+    if (e.key === 'Enter') sendPrivateMessage();
   };
 </script>
 </body>
